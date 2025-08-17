@@ -2,10 +2,16 @@ import { Router } from "express";
 import * as authServices from "./auth.service.js";
 import { isValid } from "../../middleware/validation.middleware.js";
 import { registerSchema } from "./auth.validation.js";
+import { fileUpload } from "../../utils/multer/multer.local.js";
 
 const router = Router();
 
-router.post("/register", isValid(registerSchema), authServices.register);
+router.post(
+  "/register",
+  isValid(registerSchema),
+  fileUpload().none(),
+  authServices.register
+);
 router.post("/login", authServices.login);
 router.post("/verify-account", authServices.verifyAccount);
 router.post("/resend-otp", authServices.resendOtp);
