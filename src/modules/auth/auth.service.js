@@ -86,9 +86,7 @@ export const googleLogin = async (req, res, next) => {
   //get data from req
   const { idToken } = req.body;
   //verify idToken
-  const client = new OAuth2Client(
-    "896886277689-nsn1k78rcgc6jpu7bciuf6thd51sdg7e.apps.googleusercontent.com"
-  );
+  const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
   const ticket = await client.verifyIdToken({ idToken });
   const payload = ticket.getPayload();
   //check user exist
@@ -105,7 +103,7 @@ export const googleLogin = async (req, res, next) => {
     //generate token
     const token = jwt.sign(
       { id: userExist._id, name: userExist.fullName },
-      "kwWKBHEVFGVFRHQBHWFVGEVQWJBFE",
+      process.env.JWT_SECRET,
       {
         expiresIn: "15m",
       }
@@ -174,14 +172,14 @@ export const login = async (req, res, next) => {
   //generate token
   const accessToken = jwt.sign(
     { id: userExist._id, name: userExist.fullName },
-    "kwWKBHEVFGVFRHQBHWFVGEVQWJBFE",
+    process.env.JWT_SECRET,
     {
       expiresIn: "15m",
     }
   );
   const refreshToken = jwt.sign(
     { id: userExist._id, name: userExist.fullName },
-    "kwWKBHEVFGVFRHQBHWFVGEVQWJBFE",
+    process.env.JWT_SECRET,
     {
       expiresIn: "7d",
     }
@@ -228,7 +226,7 @@ export const resetPassword = async (req, res, next) => {
 export const refreshAccessToken = async (req, res, next) => {
   const { refreshToken } = req.body;
   if (!refreshToken) throw new Error("Refresh token required", { cause: 401 });
-  const payload = jwt.verify(refreshToken, "kwWKBHEVFGVFRHQBHWFVGEVQWJBFE");
+  const payload = jwt.verify(refreshToken, process.env.JWT_SECRET);
 
   const user = await User.findById(payload.id);
   if (!user || user.refreshToken !== refreshToken) {
@@ -237,7 +235,7 @@ export const refreshAccessToken = async (req, res, next) => {
 
   const newAccessToken = jwt.sign(
     { id: user._id, name: user.fullName },
-    "kwWKBHEVFGVFRHQBHWFVGEVQWJBFE",
+    process.env.JWT_SECRET,
     { expiresIn: "15m" }
   );
 

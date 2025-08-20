@@ -4,6 +4,8 @@ import messageRouter from "../src/modules/message/message.controller.js";
 import userRouter from "../src/modules/user/user.controller.js";
 import cors from "cors";
 import fs from "node:fs";
+import dotenv from "dotenv";
+dotenv.config({ path: "./config/local.env" });
 export function bootstrap(app, express) {
   app.use(express.json());
   app.use(express.static("uploads"));

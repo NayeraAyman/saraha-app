@@ -1,7 +1,8 @@
 import express from "express";
 import { bootstrap } from "./app.controller.js";
+import dotenv from "dotenv";
 const app = express();
-const port = 3000;
+const port = process.env.PORT;
 
 bootstrap(app, express);
 

@@ -6,8 +6,8 @@ export async function sendMail({ to, subject, html }) {
     host: "smtp.gmail.com",
     port: 587,
     auth: {
-      user: "nayeraaymanahmed@gmail.com",
-      pass: "zkeyfhgoqgxqfddy",
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
     },
   });
 
