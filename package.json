@@ -4,7 +4,7 @@
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "start:dev": "node --watch ."
+    "start:dev": "node --env-file=./config/local.env --watch ."
   },
   "keywords": [],
   "author": "",

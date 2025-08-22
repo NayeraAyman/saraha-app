@@ -65,11 +65,21 @@ const userSchema = new Schema(
       default: "local",
     },
     profilePicture: {
-      type: String,
+      secure_url: String,
+      public_id: String,
     },
     refreshToken: {
       type: String,
     },
+    failedOtpAttempts: {
+      type: Number,
+      default: 0,
+    },
+    bannedUntil: {
+      type: Date,
+      default: null,
+    },
+    
   },
   { timestamps: true, toObject: { virtuals: true }, toJSON: { virtuals: true } }
 );

@@ -64,18 +64,36 @@ export const verifyAccount = async (req, res, next) => {
   //get data from req
   const { otp, email } = req.body;
   //check user exist
-  const userExist = await User.findOne({
-    email,
-    otp,
-    otpExpire: { $gt: Date.now() },
-  });
+  const userExist = await User.findOne({ email });
   if (!userExist) {
     throw new Error("invalid otp", { cause: 401 });
   }
+  //check user is banned
+  if (userExist.bannedUntil && userExist.bannedUntil > Date.now()) {
+    const minutesLeft = Math.ceil((userExist.bannedUntil - Date.now()) / 60000);
+    throw new Error(`you are banned . try again in ${minutesLeft} minutes`, {
+      cause: 429,
+    });
+  }
+  //check otp expire
+  if (!userExist.otp || userExist.otpExpire < Date.now()) {
+    throw new Error("otp expired", { cause: 401 });
+  }
+  if (userExist.otp !== otp) {
+    userExist.failedOtpAttempts += 1;
+    if (userExist.failedOtpAttempts >= 5) {
+      userExist.bannedUntil = new Date(Date.now() + 5 * 60 * 1000);
+    }
+    await userExist.save();
+    throw new Error("invalid otp", { cause: 401 });
+  }
+
   //update user
   userExist.isVerified = true;
   userExist.otp = undefined;
   userExist.otpExpire = undefined;
+  userExist.failedOtpAttempts = 0;
+  userExist.bannedUntil = null;
   await userExist.save();
   //send response
   return res
@@ -119,10 +137,26 @@ export const googleLogin = async (req, res, next) => {
 export const resendOtp = async (req, res, next) => {
   //get data from req
   const { email } = req.body;
-  //generate otp
+  //check user exist
+  const userExist = await User.findOne({ email });
+  if (!userExist) {
+    throw new Error("user not found", { cause: 404 });
+  }
+  //check user banned
+  if (userExist.bannedUntil && userExist.bannedUntil > Date.now()) {
+    const minutesLeft = Math.ceil((userExist.bannedUntil - Date.now()) / 60000);
+    throw new Error(`you are banned . try again in ${minutesLeft} minutes`, {
+      cause: 429,
+    });
+  }
+  //generate new otp
   const { otp, otpExpire } = generateOtp();
   //update user
-  await User.updateOne({ email }, { otp, otpExpire });
+  userExist.otp = otp;
+  userExist.otpExpire = otpExpire;
+  userExist.failedOtpAttempts = 0;
+  userExist.bannedUntil = null;
+  await userExist.save();
 
   //send email
   await sendMail({
